@@ -421,3 +421,12 @@ main:has(#gwrap) { max-width: 1000px; }
 @media (max-width: 720px) {
   .g3d .quest, .minimap { top: 86px; }
 }
+
+/* 대화 나가기 버튼 */
+.dlg { position: absolute; }
+.dclose {
+  position: absolute; top: 8px; right: 10px; z-index: 1; border: 1px solid var(--line); background: #fff; color: var(--muted);
+  border-radius: 8px; padding: 3px 10px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+}
+.dclose:hover { color: var(--danger); border-color: var(--danger); }
+.dlg .dhead { padding-right: 80px; }

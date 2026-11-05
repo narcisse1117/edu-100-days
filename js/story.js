@@ -42,6 +42,10 @@ const Story = (() => {
   const MAP = { w: "ArrowUp", a: "ArrowLeft", s: "ArrowDown", d: "ArrowRight", W: "ArrowUp", A: "ArrowLeft", S: "ArrowDown", D: "ArrowRight" };
   document.addEventListener("keydown", (e) => {
     if (!$id("gwrap")) return;
+    if (e.key === "Escape") {
+      if (!$id("modal").classList.contains("hidden")) return closeModal();
+      return cancelDlg();
+    }
     const tag = (e.target.tagName || "").toLowerCase();
     if (tag === "textarea" || tag === "input" || tag === "select") return;
     if (!$id("modal").classList.contains("hidden")) return;
@@ -84,8 +88,8 @@ const Story = (() => {
         </div>
       </div>
       <p class="ghelp">${kind === "3d"
-        ? "⌨️ <b>WASD / 방향키</b> 이동 · <b>마우스 드래그 / Q E</b> 시점 회전 · <b>휠</b> 줌 · <b>클릭</b> 그곳으로 이동 · <b>Space</b> 말 걸기 · <b>1 2 3</b> 선택"
-        : "⌨️ <b>방향키 / WASD</b> 이동 · <b>Space</b> 말 걸기 · 대화 중 <b>1 2 3</b> 선택"} &nbsp;|&nbsp; <b class="bang">!</b> 표시를 찾아가세요</p>`;
+        ? "⌨️ <b>WASD / 방향키</b> 이동 · <b>마우스 드래그 / Q E</b> 시점 회전 · <b>휠</b> 줌 · <b>클릭</b> 그곳으로 이동 · <b>Space</b> 말 걸기 · <b>1 2 3</b> 선택 · <b>Esc</b> 나가기"
+        : "⌨️ <b>방향키 / WASD</b> 이동 · <b>Space</b> 말 걸기 · 대화 중 <b>1 2 3</b> 선택 · <b>Esc</b> 나가기"} &nbsp;|&nbsp; <b class="bang">!</b> 표시를 찾아가세요</p>`;
     app.querySelectorAll(".touch [data-k]").forEach((b) => {
       const k = b.dataset.k;
       const on = (e) => { e.preventDefault(); if (k === " ") press(" "); else keys[k] = true; };
@@ -176,8 +180,10 @@ const Story = (() => {
     if (opts && opts.talkTo) R.onTalk(opts.talkTo, opts.card);
     sfx("open");
     const el = $id("dlg"); el.classList.remove("hidden");
-    el.innerHTML = `${speakerHTML(who)}<div class="dbody">${opts && opts.head ? opts.head : ""}<p class="dtext" id="dtext"></p><div id="dchoices"></div><div class="dnext hidden" id="dnext">▼ Space</div></div>`;
+    const cancelable = !!(opts && opts.cancel);
+    el.innerHTML = `${cancelable ? '<button class="dclose" id="dclose" title="나가기 (Esc)">✕ 나가기</button>' : ""}${speakerHTML(who)}<div class="dbody">${opts && opts.head ? opts.head : ""}<p class="dtext" id="dtext"></p><div id="dchoices"></div><div class="dnext hidden" id="dnext">▼ Space</div></div>`;
     el.onclick = (e) => { if (!e.target.closest("button")) advance(); };
+    if (cancelable) $id("dclose").onclick = (e) => { e.stopPropagation(); cancelDlg(); };
     const tEl = $id("dtext");
     let i = 0;
     clearInterval(typer);
@@ -191,7 +197,7 @@ const Story = (() => {
       if (opts && opts.choices) showChoices(opts.choices, opts.onPick, opts.extra);
       else $id("dnext").classList.remove("hidden");
     }
-    dlgDone = { finishType, after: opts && opts.after, keepTalk: opts && opts.keepTalk };
+    dlgDone = { finishType, after: opts && opts.after, keepTalk: opts && opts.keepTalk, cancel: cancelable, isCard: !!(opts && opts.card) };
   }
   function advance() {
     if (!dlgDone) return;
@@ -214,7 +220,14 @@ const Story = (() => {
     }));
     const ask = $id("dask"); if (ask) ask.addEventListener("click", () => openAsk(World.curCard()));
   }
-  function say(who, text, after) { openDlg(who, text, { after, talkTo: who && (who.look || who.p3) ? who : null }); }
+  function say(who, text, after) { openDlg(who, text, { after, cancel: true, talkTo: who && (who.look || who.p3) ? who : null }); }
+  // 선택 전 대화에서 빠져나가기 (카드는 그대로 남아 다시 말 걸면 이어서 진행)
+  function cancelDlg() {
+    if (mode !== "dialog" || !dlgDone || !dlgDone.cancel) return;
+    const wasCard = dlgDone.isCard;
+    closeDlg();
+    if (wasCard) toast("나중에 다시 말을 걸면 이어서 할 수 있어요");
+  }
 
   // ---------- 상황 카드 ----------
   function startCard(card, who) {
@@ -222,7 +235,7 @@ const Story = (() => {
     const speaker = CARD_SPEAKER[card.id] ? { name: CARD_SPEAKER[card.id], icon: "" } : who;
     const head = `<div class="dhead"><span class="tag">${esc(card.category)}</span>${card.custom ? ' <span class="tag amber">선배 등록 카드</span>' : ""} <b>${esc(card.title)}</b></div>`;
     openDlg(speaker, card.text, {
-      head, talkTo: who, card,
+      head, talkTo: who, card, cancel: true,
       choices: order.map((oi) => card.choices[oi].text),
       extra: `<button class="dask" id="dask">🙋 선배에게 물어보기</button>`,
       onPick: (k) => pick(card, order[k], who),
