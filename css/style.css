@@ -224,7 +224,7 @@ main:has(#gwrap) { max-width: 1000px; }
   position: relative; border: 3px solid var(--pixline); border-radius: 0 0 12px 12px; overflow: hidden;
   background: #1f2430; aspect-ratio: 960 / 576; font-family: var(--pix);
 }
-.gwrap canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.gwrap.g2d .gstage canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
 .gwrap.shake { animation: shake .35s; }
 @keyframes shake { 20% { transform: translate(-6px, 2px); } 40% { transform: translate(5px, -3px); } 60% { transform: translate(-4px, 1px); } 80% { transform: translate(3px, -1px); } }
 .quest {
@@ -292,3 +292,132 @@ main:has(#gwrap) { max-width: 1000px; }
 }
 .touch { z-index: 1; }
 .dlg, .gpanel { z-index: 2; }
+
+/* =============================================================
+   3D 모드
+   ============================================================= */
+.gwrap.g3d { aspect-ratio: 16 / 9; border-radius: 14px; background: #1b2033; font-family: Pretendard, "Malgun Gothic", sans-serif; }
+.gwrap.g2d .gstage canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.gstage { position: absolute; inset: 0; }
+.gwrap.g2d .gstage { position: relative; height: 100%; }
+.g3d-canvas { display: block; width: 100% !important; height: 100% !important; touch-action: none; cursor: grab; }
+.g3d-canvas:active { cursor: grabbing; }
+.gwrap:fullscreen { aspect-ratio: auto; width: 100vw; height: 100vh; border-radius: 0; border: none; }
+.glabels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
+
+.ghud.overlay {
+  position: absolute; top: 10px; left: 10px; right: 10px; z-index: 1; border: none; border-radius: 14px;
+  background: rgba(255, 253, 246, .9); backdrop-filter: blur(8px); box-shadow: 0 4px 18px rgba(0,0,0,.15);
+  font-family: Pretendard, "Malgun Gothic", sans-serif; padding: 8px 12px;
+}
+.ghud .hud-right { display: flex; align-items: center; gap: 10px; }
+.ghud .hud-sub { color: var(--muted); }
+.hud-btns { display: flex; gap: 4px; }
+.hud-btns button { border: 1px solid var(--line); background: #fff; border-radius: 8px; min-width: 32px; height: 30px; font-weight: 800; font-size: 13px; }
+.hud-btns button:hover { background: var(--primary-soft); }
+.g3d .mg .bar { border: none; height: 8px; border-radius: 99px; background: #e6e2d8; }
+.g3d .mg .bar i { border-radius: 99px; }
+.g3d .days span { font-family: Pretendard, sans-serif; }
+.portrait.p3 { border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.15); border-radius: 50%; background: #e3ece6; image-rendering: auto; object-fit: cover; }
+.dlg .portrait.p3 { border-radius: 14px; }
+
+.g3d .quest {
+  top: 78px; left: 10px; font-family: Pretendard, sans-serif; font-size: 13px; border: none; border-left: 4px solid var(--accent);
+  border-radius: 10px; box-shadow: 0 4px 14px rgba(0,0,0,.15); background: rgba(255,253,246,.92); padding: 8px 12px; z-index: 1;
+}
+.quest .q-title { font-weight: 800; color: var(--primary); }
+.quest .q-title span { color: var(--muted); font-weight: 600; margin-left: 4px; }
+.minimap {
+  position: absolute; right: 10px; bottom: 10px; width: 200px; height: 120px; border-radius: 10px; z-index: 1;
+  border: 2px solid rgba(255,255,255,.9); box-shadow: 0 4px 14px rgba(0,0,0,.25); cursor: pointer;
+}
+.lbl {
+  position: absolute; left: 0; top: 0; padding: 2px 9px; border-radius: 99px; white-space: nowrap;
+  background: rgba(31,36,48,.72); color: #fff; font-size: 12px; font-weight: 700; will-change: transform;
+}
+.lbl.target { background: var(--primary); box-shadow: 0 0 0 2px rgba(255,255,255,.7); }
+.lbl.target::before { content: "! "; color: #ffd27a; }
+.prompt3 {
+  position: absolute; left: 0; top: 0; display: none; pointer-events: auto; border: none; cursor: pointer;
+  background: rgba(31,36,48,.9); color: #fff; padding: 6px 12px; border-radius: 10px; font-size: 13px; white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25); animation: bob .9s ease-in-out infinite;
+}
+.prompt3 b { background: #fff; color: var(--ink); border-radius: 5px; padding: 0 6px; margin-right: 4px; font-size: 11px; }
+.gain {
+  position: absolute; transform: translate(-50%, -50%); font-weight: 900; font-size: 16px; white-space: nowrap;
+  text-shadow: 0 0 4px #fff, 0 0 8px #fff; animation: gainUp 2.2s ease-out forwards; opacity: 0;
+}
+.gain.up { color: #1f8a57; } .gain.down { color: #c2453d; }
+@keyframes gainUp { 0% { opacity: 0; margin-top: 10px; } 12% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; margin-top: -60px; } }
+
+.g3d .dlg {
+  font-family: Pretendard, "Malgun Gothic", sans-serif; border: none; border-radius: 16px; background: rgba(255,253,246,.96);
+  box-shadow: 0 10px 30px rgba(0,0,0,.25); padding: 16px 18px; left: 4%; right: 4%; bottom: 4%; backdrop-filter: blur(6px);
+}
+.g3d .dlg .dtext { font-size: 16px; }
+.g3d .dchoice, .g3d .dask { font-family: Pretendard, sans-serif; border: 1.5px solid var(--line); box-shadow: none; border-radius: 10px; font-size: 14px; padding: 10px 14px; }
+.g3d .dchoice:hover { border-color: var(--primary); }
+.g3d .dchoice b { background: var(--primary); }
+.g3d .gbox { font-family: Pretendard, "Malgun Gothic", sans-serif; border: none; border-radius: 18px; box-shadow: 0 16px 50px rgba(0,0,0,.35); }
+.g3d .gbox h1, .g3d .gbox h2, .g3d .gbox h3 { font-family: Pretendard, sans-serif; }
+.g3d .gpanel.intro { background: linear-gradient(180deg, rgba(255,250,235,.0), rgba(255,250,235,.35)); align-items: flex-end; padding-bottom: 6%; }
+.g3d .gpanel.intro .gbox { width: min(460px, 100%); }
+.g3d .gpanel.night { background: rgba(10,14,40,.35); }
+.g3d .gpanel { z-index: 3; }
+.g3d .dlg { z-index: 3; }
+
+.confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.confetti i { position: absolute; top: -12px; width: 9px; height: 14px; border-radius: 2px; animation: fall linear infinite; opacity: .9; }
+@keyframes fall { 0% { transform: translateY(-20px) rotate(0); } 100% { transform: translateY(110vh) rotate(720deg); } }
+.preview.p3d { padding: 0; background: radial-gradient(circle at 50% 40%, #fffaf0, #e8e1d2); }
+.preview.p3d canvas { display: block; }
+
+@media (max-width: 720px) {
+  .ghud.overlay { padding: 6px 8px; gap: 6px; top: 6px; left: 6px; right: 6px; }
+  .ghud.overlay .who div, .ghud.overlay .days { display: none; }
+  .g3d .quest { top: 56px; font-size: 11px; }
+  .minimap { width: 120px; height: 72px; bottom: auto; top: 56px; }
+  .g3d .dlg .dtext { font-size: 13px; }
+  .lbl { font-size: 10px; }
+}
+
+.g3d .gpanel.intro .day-intro { padding: 6px; }
+.g3d .gpanel.intro .day-intro .big { font-size: 44px; }
+.g3d .gpanel.intro .day-intro h2 { margin: 0 0 4px; }
+.g3d .gpanel.intro .day-intro p { margin: 0 0 12px; }
+
+/* 3D 대화창: 장면이 보이도록 아래쪽에 낮게 */
+.g3d .dlg { max-height: 48%; padding: 12px 16px; bottom: 3%; }
+.g3d .dlg .dtext { font-size: 15px; line-height: 1.55; min-height: 0; margin-bottom: 2px; }
+.g3d .dlg .spk { width: 78px; }
+.g3d .dlg .portrait.p3 { width: 56px; height: 56px; }
+.g3d .dchoice { padding: 7px 12px; margin-top: 5px; font-size: 13.5px; }
+.g3d .dask { margin-top: 6px; padding: 5px 10px; }
+.g3d .dhead { margin-bottom: 2px; }
+
+/* 3D 모바일 세로 화면 */
+@media (max-width: 720px) {
+  main:has(#gwrap) { padding: 12px 8px 40px; }
+  .gwrap.g3d { aspect-ratio: 3 / 4.4; }
+  .ghud.overlay { display: grid; grid-template-columns: auto 1fr auto; align-items: center; padding: 5px 8px; border-radius: 10px; }
+  .ghud.overlay .portrait { width: 30px; height: 30px; }
+  .g3d .mini-gauges { display: grid; grid-template-columns: 1fr 1fr; gap: 1px 8px; justify-content: stretch; }
+  .g3d .mg { font-size: 10px; gap: 3px; }
+  .g3d .mg span { white-space: nowrap; }
+  .g3d .mg .bar { width: auto; flex: 1; height: 6px; }
+  .g3d .mg b { width: 18px; font-size: 10px; }
+  .ghud.overlay .hud-right .days { display: none; }
+  .hud-btns { flex-direction: column; }
+  .hud-btns button { height: 22px; min-width: 28px; font-size: 11px; }
+  .g3d .quest { top: 70px; left: 6px; max-width: 55%; padding: 5px 8px; }
+  .minimap { top: 70px; right: 6px; bottom: auto; width: 110px; height: 66px; }
+  .g3d .dlg { left: 2%; right: 2%; max-height: 62%; padding: 10px; }
+  .g3d .dlg .spk { width: 52px; } .g3d .dlg .portrait.p3 { width: 44px; height: 44px; }
+  .g3d .dchoice { font-size: 12.5px; }
+  .g3d .gpanel .gbox { padding: 14px; }
+  .ghelp { display: none; }
+  .touch { bottom: 10px; }
+}
+@media (max-width: 720px) {
+  .g3d .quest, .minimap { top: 86px; }
+}

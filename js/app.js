@@ -27,6 +27,7 @@ const S = {
   writer: LS.get("writer", ""),
   seniorName: LS.get("seniorName", ""),
   seniorPrefill: "",
+  mode: LS.get("mode", "3d"),
 };
 
 if (!S.posts) {
@@ -153,8 +154,9 @@ function renderHome(app) {
 // =============================================================
 function renderGame(app) {
   if (!S.game) return renderAvatar(app);
-  Game.mount(app);
+  use3D() ? Game3D.mount(app) : Game2D.mount(app);
 }
+const use3D = () => S.mode !== "2d" && typeof Game3D !== "undefined" && Game3D.supported;
 
 function orderOf(card) {
   const g = S.game;
@@ -178,7 +180,7 @@ function renderAvatar(app) {
       <h2 style="margin-top:10px">입사를 축하합니다! 🎉</h2>
       <p class="muted">${COMPANY.name} ${COMPANY.team}의 신입사원이 되었어요. 사무실을 돌아다니며 선배들과 부딪히는 100일을 살아보세요.</p>
       <div class="maker">
-        <div class="preview"><canvas id="pv" width="120" height="150"></canvas></div>
+        <div class="preview ${use3D() ? "p3d" : ""}" id="pvbox">${use3D() ? "" : '<canvas id="pv" width="120" height="150"></canvas>'}</div>
         <div style="flex:1;min-width:220px">
           <label style="margin-top:0">이름</label>
           <input id="nm" maxlength="8" placeholder="예: 김신입" value="${esc(S.writer)}" />
@@ -196,14 +198,17 @@ function renderAvatar(app) {
       </div>
       <button class="btn" id="start" style="width:100%;margin-top:6px">입사하기 →</button>
     </div>`;
+  if (use3D()) Game3D.preview($("#pvbox"), lk);
+  else (function () {
   const pv = $("#pv"), pc = pv.getContext("2d");
   let t = 0, dirs = ["down", "left", "up", "right"];
   (function anim() {
     if (!document.body.contains(pv)) return;
     t++; pc.clearRect(0, 0, 120, 150); pc.imageSmoothingEnabled = false;
     pc.save(); pc.translate(60, 138); pc.scale(3, 3);
-    Game.drawPerson(pc, 0, 0, lk, dirs[Math.floor(t / 90) % 4], [0, 1, 0, 2][Math.floor(t / 10) % 4]);
+    Game2D.drawPerson(pc, 0, 0, lk, dirs[Math.floor(t / 90) % 4], [0, 1, 0, 2][Math.floor(t / 10) % 4]);
     pc.restore(); requestAnimationFrame(anim);
+  })();
   })();
   app.querySelectorAll("[data-key]").forEach((b) => b.addEventListener("click", () => {
     lk[b.dataset.key] = b.dataset.v; LS.set("look", lk); S.writer = $("#nm").value.trim(); renderAvatar(app);
