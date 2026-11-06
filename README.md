@@ -37,7 +37,7 @@ index.html        진입점
 css/style.css     스타일
 js/data.js        콘텐츠 (상황 카드 · 시니어 · 회고 · 엔딩) ← 조사 결과로 교체
 js/world.js       사무실 배치 · NPC · 상황 카드와 NPC 연결 (2D/3D 공통)
-js/scenes.js      상황 컷씬 일러스트 (SVG 애니메이션 · 카드별 장면 · 출퇴근 엘리베이터)
+js/scenes.js      1인칭 상황 컷씬 (SVG 애니메이션 · 카드별 장면 · 출퇴근 엘리베이터)
 js/story.js       게임 진행 (대화창 · 선택 · 피드백 · 회고 · 엔딩 · HUD · 효과음)
 js/game3d.js      3D 렌더러 (사무실 · 캐릭터 · 카메라 · 길찾기 · 시간대 조명)
 js/game2d.js      2D 렌더러 (저사양 PC용 · 미니맵 배경)

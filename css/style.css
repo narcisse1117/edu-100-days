@@ -534,3 +534,14 @@ main:has(#gwrap) { max-width: 1000px; }
 .scene.still .tmp, .scene.still .c-fall { display: none; }
 .scene .c-flash, .scene .c-out { opacity: 0; }
 .hud-btns button.off { opacity: .4; }
+/* 1인칭 장면 */
+.scene .c-tap, .scene .c-up, .scene .c-walkout, .scene .c-pov { transform-box: fill-box; }
+.scene .c-tap { animation: cTap .22s ease-in-out infinite alternate; }
+.scene .c-up { animation: cUp .6s cubic-bezier(.2, .8, .3, 1) both; }
+.scene .c-door { animation: cDoor .9s cubic-bezier(.5, 0, .3, 1) both; }
+.scene .c-walkout { transform: scale(1.32); transform-origin: 50% 46%; animation: cWalkout 1.4s ease-in-out both; }
+.scene .c-pov { animation: cPov 3.2s ease-in-out infinite alternate; transform-origin: 50% 50%; }
+@keyframes cTap { to { transform: translateY(-5px); } }
+@keyframes cUp { from { transform: translateY(160px); } }
+@keyframes cWalkout { from { transform: scale(1); } }
+@keyframes cPov { from { transform: translate(-2px, 1px) rotate(-.25deg); } to { transform: translate(2px, -1px) rotate(.25deg); } }

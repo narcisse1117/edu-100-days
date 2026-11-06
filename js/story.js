@@ -166,7 +166,7 @@ const Story = (() => {
       gm.phase = "retro"; save(); R.sync();
       const d = DAYS[gm.day - 1], go2 = () => { sfx("night"); showRetro(); };
       if (!cutsOn()) return go2();
-      return playCut(Scenes.elevator({ me: look(), day: gm.day }, "down"), { tag: `${d.label} · 퇴근`, title: "오늘도 수고했어요" }, go2, go2);
+      return playCut(Scenes.elevator({ me: look(), day: gm.day, name: gm.name }, "down"), { tag: `${d.label} · 퇴근`, title: "오늘도 수고했어요" }, go2, go2);
     }
     if (nb.id === "coffee") {
       if (gm.coffee === gm.day) return say(nb, "오늘은 이미 한 잔 마셨어요. 카페인은 하루 한 잔! ☕");
@@ -271,7 +271,7 @@ const Story = (() => {
   const seenCuts = new Set();
   let cut = null;
   const cutsOn = () => LS.get("cuts", true) !== false;
-  const sceneOf = (card) => { try { return Scenes.forCard(card, { me: look(), day: g().day }); } catch (e) { return null; } };
+  const sceneOf = (card) => { try { return Scenes.forCard(card, { me: look(), day: g().day, name: g().name }); } catch (e) { return null; } };
   // onDone: 끝나거나 건너뛰면 / onCancel: Esc로 취소하면 (없으면 onDone 대신 이전 상태로 복귀)
   function playCut(sc, meta, onDone, onCancel) {
     if (cut) endCut(false, true);
@@ -365,7 +365,7 @@ const Story = (() => {
     p.querySelector("#dgo").addEventListener("click", () => {
       gm.phase = "play"; save(); closePanel(); updateHUD(); R.sync();
       if (!cutsOn()) return sfx("day");
-      playCut(Scenes.elevator({ me: look(), day: gm.day }, "up"), { tag: `${d.label} · 출근`, title: d.title }, () => sfx("day"), () => sfx("day"));
+      playCut(Scenes.elevator({ me: look(), day: gm.day, name: gm.name }, "up"), { tag: `${d.label} · 출근`, title: d.title }, () => sfx("day"), () => sfx("day"));
     });
   }
 
