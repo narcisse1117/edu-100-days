@@ -7,6 +7,8 @@
 
 ## 실행 방법
 
+▶ **바로 플레이: https://narcisse1117.github.io/edu-100-days/**
+
 설치가 필요 없습니다. `index.html`을 브라우저(Chrome · Edge 권장)에서 열면 됩니다. 인터넷 연결 없이도 동작합니다.
 
 | 조작 | 키 |
