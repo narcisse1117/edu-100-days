@@ -430,3 +430,107 @@ main:has(#gwrap) { max-width: 1000px; }
 }
 .dclose:hover { color: var(--danger); border-color: var(--danger); }
 .dlg .dhead { padding-right: 80px; }
+
+/* ===================== 상황 컷씬 ===================== */
+.cut { position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(12, 16, 26, .92); animation: cutIn .35s ease both; cursor: pointer; padding: 3% 4% 46px; }
+.cut.out { animation: cutOut .35s ease both; pointer-events: none; }
+.cut { container-type: size; }
+.cut-frame { position: relative; width: min(100cqw - 6%, (100cqh - 90px) * 16 / 9); aspect-ratio: 16 / 9; flex-shrink: 0; border-radius: 18px; overflow: hidden;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .45); background: #eef1f5; animation: cutFrame .5s cubic-bezier(.2, .9, .3, 1.2) both; }
+.cut-frame svg { width: 100%; height: 100%; display: block; }
+.cut-cap { margin-top: 12px; display: flex; align-items: center; gap: 10px; color: #fff; flex-wrap: wrap; justify-content: center; animation: cutCap .5s .25s ease both; }
+.cut-cap b { font-size: 20px; } .cut-cap small { opacity: .75; font-size: 13px; }
+.cut-cap .tag { background: #e8a33d; color: #fff; }
+.cut-skip { position: absolute; right: 18px; bottom: 14px; color: rgba(255, 255, 255, .7); font-size: 12px; }
+.cut-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255, 255, 255, .12); }
+.cut-bar i { display: block; height: 100%; background: #e8a33d; transform-origin: left; animation: cutBar linear both; }
+@keyframes cutIn { from { opacity: 0; } } @keyframes cutOut { to { opacity: 0; } }
+@keyframes cutFrame { from { transform: scale(.88); opacity: 0; } }
+@keyframes cutCap { from { opacity: 0; transform: translateY(8px); } }
+@keyframes cutBar { from { transform: scaleX(0); } }
+@media (max-width: 720px) { .cut-cap b { font-size: 15px; } .cut-cap small { display: none; } .cut { padding: 2% 2% 34px; } .cut-frame { border-radius: 10px; } .cut-skip { bottom: 8px; } }
+
+/* 대화창 안 장면 썸네일 */
+.dscene { float: right; width: 168px; aspect-ratio: 16 / 9; margin: 26px 0 6px 12px; border-radius: 10px; overflow: hidden; cursor: pointer; position: relative;
+  border: 2px solid #e3e8ef; background: #eef1f5; }
+.dscene svg { width: 100%; height: 100%; display: block; }
+.dscene::after { content: "▶ 다시 보기"; position: absolute; right: 6px; bottom: 5px; font-size: 10px; color: #fff; background: rgba(0, 0, 0, .55); padding: 1px 6px; border-radius: 8px; }
+.dscene:hover { border-color: #e8a33d; }
+@media (max-width: 720px) { .dscene { display: none; } }
+
+/* 장면 애니메이션 — 기본 상태 = 마지막 장면, 애니메이션은 처음 상태에서 출발 */
+.scene .c-pop, .scene .c-in, .scene .c-slide-l, .scene .c-slide-r, .scene .c-drop, .scene .c-growx, .scene .c-type, .scene .c-stepout, .scene .c-enter,
+.scene .c-lean, .scene .c-tug, .scene .c-breathe, .scene .c-blink, .scene .c-sway, .scene .c-ring, .scene .c-waves, .scene .c-pulse, .scene .c-zoom { transform-box: fill-box; }
+.scene .c-pop { animation: cPop .45s cubic-bezier(.2, .9, .3, 1.4) both; transform-origin: 50% 50%; }
+.scene .c-pop.c-orig-b { transform-origin: 50% 100%; }
+.scene .c-in { animation: cIn .45s ease-out both; }
+.scene .c-out { animation: cOut .2s ease both; }
+.scene .c-flash { animation: cFlash .2s linear both; }
+.scene .c-slide-l { animation: cSlideL .9s cubic-bezier(.2, .8, .3, 1) both; }
+.scene .c-slide-r { animation: cSlideR .9s cubic-bezier(.2, .8, .3, 1) both; }
+.scene .c-fast { animation-duration: .7s; }
+.scene .c-drop { animation: cDrop .5s cubic-bezier(.3, 1.4, .5, 1) both; }
+.scene .c-growx { animation: cGrowX 1s ease-out both; transform-origin: 0 50%; }
+.scene .c-type { animation: cGrowX 1.4s steps(12) both; transform-origin: 0 50%; }
+.scene .c-fly { animation: cFly 1.1s ease-in both; }
+.scene .c-door-open, .scene .c-door-close { animation: cDoor .9s cubic-bezier(.5, 0, .3, 1) both; }
+.scene .c-stepout { animation: cStep .9s ease-out both; transform-origin: 50% 100%; }
+.scene .c-enter { animation: cEnter .9s ease-out both; transform-origin: 50% 100%; }
+.scene .c-caret { animation: cBlinkC .8s steps(1) infinite; }
+.scene .c-lean { transform: rotate(-6deg); animation: cLean .6s ease-out both; transform-origin: 50% 100%; }
+.scene .c-tug { animation: cTug .5s ease-in-out 4 alternate both; transform-origin: 50% 50%; }
+.scene .c-fall { opacity: 0; animation: cFall 1.6s ease-in both; }
+.scene .c-breathe { animation: cBreathe 2.6s ease-in-out infinite; transform-origin: 50% 100%; }
+.scene .c-blink { animation: cBlink 3.6s infinite; transform-origin: 50% 50%; }
+.scene .c-drip { animation: cDrip 1.3s ease-in infinite; }
+.scene .c-wave { animation: cWave .5s ease-in-out infinite alternate; }
+.scene .c-float { animation: cFloat 1s ease-in-out infinite alternate; }
+.scene .c-rise { animation: cRise 1.8s ease-out infinite; }
+.scene .c-twinkle { animation: cTwinkle 1.6s ease-in-out infinite alternate; }
+.scene .c-cloud { animation: cCloud 9s linear infinite alternate; }
+.scene .c-sway { animation: cSway 3s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+.scene .c-spin { animation: cSpin 1.4s cubic-bezier(.3, 0, .3, 1) both; }
+.scene .c-spin-h { animation: cSpinH 1.4s cubic-bezier(.3, 0, .3, 1) both; }
+.scene .c-ring { animation: cRing .9s ease-in-out both; transform-origin: 50% 100%; }
+.scene .c-waves { opacity: 0; animation: cWaves 1.4s ease-in-out both; transform-origin: 50% 50%; }
+.scene .c-look { animation: cLook .6s ease-in-out infinite alternate; }
+.scene .c-pulse { animation: cPulse .7s ease-in-out infinite alternate; transform-origin: 50% 50%; }
+.scene .c-zoom { animation: cZoom 5s ease-out both; transform-origin: 50% 50%; }
+@keyframes cPop { from { opacity: 0; transform: scale(.3); } 70% { opacity: 1; transform: scale(1.06); } }
+@keyframes cIn { from { opacity: 0; transform: translateY(12px); } }
+@keyframes cOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes cFlash { 0% { opacity: 0; } 8%, 92% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes cSlideL { from { transform: translateX(-320px); } 60% { transform: translateX(8px); } }
+@keyframes cSlideR { from { transform: translateX(320px); } 60% { transform: translateX(-8px); } }
+@keyframes cDrop { from { opacity: 0; transform: translateY(-60px); } }
+@keyframes cGrowX { from { transform: scaleX(0); } }
+@keyframes cFly { from { opacity: 1; transform: translate(0, 0) scale(1); } to { opacity: 0; transform: translate(260px, -240px) scale(.4); } }
+@keyframes cDoor { from { transform: translateX(var(--dx)); } }
+@keyframes cStep { from { transform: translateY(-16px) scale(.9); } }
+@keyframes cEnter { 0% { transform: translateX(300px); } 25% { transform: translateX(225px) translateY(-6px); } 50% { transform: translateX(150px); } 75% { transform: translateX(70px) translateY(-6px); } 100% { transform: none; } }
+@keyframes cBlinkC { 50% { opacity: 0; } }
+@keyframes cLean { from { transform: rotate(0); } }
+@keyframes cTug { from { transform: translateX(-10px) rotate(-4deg); } to { transform: translateX(10px) rotate(4deg); } }
+@keyframes cFall { from { opacity: 1; transform: translateY(-40px); } to { opacity: 0; transform: translateY(160px); } }
+@keyframes cBreathe { 50% { transform: scaleY(1.012); } }
+@keyframes cBlink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
+@keyframes cDrip { from { transform: translateY(-4px); opacity: 0; } 20% { opacity: 1; } to { transform: translateY(12px); opacity: 0; } }
+@keyframes cWave { from { transform: rotate(-12deg); } to { transform: rotate(16deg); } }
+@keyframes cFloat { to { transform: translateY(-7px); } }
+@keyframes cRise { from { opacity: 0; transform: translateY(6px); } 30% { opacity: 1; } to { opacity: 0; transform: translateY(-14px); } }
+@keyframes cTwinkle { from { opacity: .2; } }
+@keyframes cCloud { to { transform: translateX(40px); } }
+@keyframes cSway { from { transform: rotate(-2deg); } to { transform: rotate(2deg); } }
+@keyframes cSpin { from { transform: rotate(-720deg); } }
+@keyframes cSpinH { from { transform: rotate(-60deg); } }
+@keyframes cRing { 0%, 100% { transform: rotate(0); } 10%, 30%, 50%, 70% { transform: rotate(-7deg); } 20%, 40%, 60%, 80% { transform: rotate(7deg); } }
+@keyframes cWaves { 0%, 30%, 60% { opacity: 1; transform: scale(1.1); } 15%, 45%, 75% { opacity: .3; transform: scale(.85); } 100% { opacity: 0; } }
+@keyframes cLook { from { transform: translateX(-5px); } to { transform: translateX(5px); } }
+@keyframes cPulse { to { transform: scale(1.35); } }
+@keyframes cZoom { from { transform: scale(1.07); } }
+/* 정지 화면(대화창 썸네일): 애니메이션을 끄고 최종 장면만 */
+.scene.still * { animation: none !important; }
+.scene.still .tmp, .scene.still .c-fall { display: none; }
+.scene .c-flash, .scene .c-out { opacity: 0; }
+.hud-btns button.off { opacity: .4; }

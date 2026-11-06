@@ -35,6 +35,13 @@ const Story = (() => {
       if (type === "day") [392, 523, 659, 784].forEach((f, i) => tone(f, i * 0.1, 0.3, "sine", 0.05));
       if (type === "night") [659, 523, 392].forEach((f, i) => tone(f, i * 0.16, 0.45, "sine", 0.04));
       if (type === "end") [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, i * 0.09, 0.4, "triangle", 0.05));
+      if (type === "ding") { tone(1318, 0, 0.9, "sine", 0.06); tone(1046, 0.28, 1.1, "sine", 0.06); }
+      if (type === "ring") for (let i = 0; i < 6; i++) tone(i % 2 ? 1100 : 1400, i * 0.07, 0.06, "square", 0.018);
+      if (type === "pop") tone(880, 0, 0.07, "sine", 0.05);
+      if (type === "send") { tone(500, 0, 0.12, "triangle", 0.04); tone(1000, 0.08, 0.14, "triangle", 0.04); }
+      if (type === "type") for (let i = 0; i < 5; i++) tone(1800 + Math.random() * 400, i * 0.06, 0.02, "square", 0.008);
+      if (type === "spot") { tone(300, 0, 0.3, "sine", 0.05); tone(450, 0.05, 0.4, "sine", 0.04); }
+      if (type === "door") { tone(220, 0, 0.5, "sine", 0.03); tone(180, 0.2, 0.5, "sine", 0.03); }
     } catch (e) {}
   }
 
@@ -44,6 +51,7 @@ const Story = (() => {
     if (!$id("gwrap")) return;
     if (e.key === "Escape") {
       if (!$id("modal").classList.contains("hidden")) return closeModal();
+      if (mode === "cut") return endCut(true);
       return cancelDlg();
     }
     const tag = (e.target.tagName || "").toLowerCase();
@@ -59,6 +67,7 @@ const Story = (() => {
   window.addEventListener("blur", () => Object.keys(keys).forEach((k) => (keys[k] = false)));
 
   function press(k) {
+    if (mode === "cut") { if (k === " " || k === "Enter") endCut(false); return; }
     if (mode === "walk" && (k === " " || k === "Enter")) return interact();
     if (mode === "dialog") {
       if (choiceHandler && ["1", "2", "3", "4"].includes(k)) {
@@ -125,11 +134,13 @@ const Story = (() => {
         <div class="days">${DAYS.map((x) => `<span class="${x.day < gm.day ? "done" : x.day === gm.day ? "now" : ""}">${x.label}</span>`).join("")}</div>
         <div class="hud-btns">
           <button id="hb-mute" title="효과음">${isMuted() ? "🔇" : "🔊"}</button>
+          <button id="hb-cut" title="상황 장면 연출 켜기/끄기" class="${cutsOn() ? "" : "off"}">🎬</button>
           ${typeof Game3D !== "undefined" && Game3D.supported ? `<button id="hb-mode" title="2D/3D 전환">${R.kind === "3d" ? "2D" : "3D"}</button>` : ""}
           ${R.kind === "3d" ? '<button id="hb-full" title="전체 화면">⛶</button>' : ""}
         </div>
       </div>`;
     $id("hb-mute").onclick = () => { muted = !isMuted(); LS.set("muted", muted); updateHUD(); };
+    $id("hb-cut").onclick = () => { LS.set("cuts", !cutsOn()); toast(cutsOn() ? "🎬 상황 장면 연출을 켰어요" : "상황 장면 연출을 껐어요 (대화창 그림은 그대로)"); updateHUD(); };
     if ($id("hb-mode")) $id("hb-mode").onclick = () => { S.mode = R.kind === "3d" ? "2d" : "3d"; LS.set("mode", S.mode); render(); };
     if ($id("hb-full")) $id("hb-full").onclick = () => {
       const w = $id("gwrap");
@@ -152,7 +163,10 @@ const Story = (() => {
     if (card && World.targetOf(card) === nb.id) return startCard(card, nb);
     if (nb.id === "door") {
       if (card) return say(nb, "아직 오늘 할 일이 남았어요. 📌 할 일을 확인하세요.");
-      gm.phase = "retro"; save(); sfx("night"); R.sync(); return showRetro();
+      gm.phase = "retro"; save(); R.sync();
+      const d = DAYS[gm.day - 1], go2 = () => { sfx("night"); showRetro(); };
+      if (!cutsOn()) return go2();
+      return playCut(Scenes.elevator({ me: look(), day: gm.day }, "down"), { tag: `${d.label} · 퇴근`, title: "오늘도 수고했어요" }, go2, go2);
     }
     if (nb.id === "coffee") {
       if (gm.coffee === gm.day) return say(nb, "오늘은 이미 한 잔 마셨어요. 카페인은 하루 한 잔! ☕");
@@ -231,15 +245,58 @@ const Story = (() => {
 
   // ---------- 상황 카드 ----------
   function startCard(card, who) {
+    const sc = sceneOf(card), key = g().day + ":" + card.id;
+    if (sc && cutsOn() && !seenCuts.has(key)) {
+      seenCuts.add(key);
+      R.onTalk(who, card);
+      return playCut(sc, { tag: `${DAYS[g().day - 1].label} · ${card.category}`, title: card.title },
+        () => startCard(card, who),
+        () => { R.onTalkEnd(); seenCuts.delete(key); toast("나중에 다시 말을 걸면 이어서 할 수 있어요"); });
+    }
     const order = orderOf(card);
     const speaker = CARD_SPEAKER[card.id] ? { name: CARD_SPEAKER[card.id], icon: "" } : who;
-    const head = `<div class="dhead"><span class="tag">${esc(card.category)}</span>${card.custom ? ' <span class="tag amber">선배 등록 카드</span>' : ""} <b>${esc(card.title)}</b></div>`;
+    const thumb = sc ? `<div class="dscene" id="dscene" title="장면 다시 보기">${Scenes.svgOf(sc, "still")}</div>` : "";
+    const head = `${thumb}<div class="dhead"><span class="tag">${esc(card.category)}</span>${card.custom ? ' <span class="tag amber">선배 등록 카드</span>' : ""} <b>${esc(card.title)}</b></div>`;
     openDlg(speaker, card.text, {
       head, talkTo: who, card, cancel: true,
       choices: order.map((oi) => card.choices[oi].text),
       extra: `<button class="dask" id="dask">🙋 선배에게 물어보기</button>`,
       onPick: (k) => pick(card, order[k], who),
     });
+    const th = $id("dscene");
+    if (th) th.onclick = (ev) => { ev.stopPropagation(); playCut(sc, { tag: `${DAYS[g().day - 1].label} · ${card.category}`, title: card.title }); };
+  }
+
+  // ---------- 상황 컷씬 ----------
+  const seenCuts = new Set();
+  let cut = null;
+  const cutsOn = () => LS.get("cuts", true) !== false;
+  const sceneOf = (card) => { try { return Scenes.forCard(card, { me: look(), day: g().day }); } catch (e) { return null; } };
+  // onDone: 끝나거나 건너뛰면 / onCancel: Esc로 취소하면 (없으면 onDone 대신 이전 상태로 복귀)
+  function playCut(sc, meta, onDone, onCancel) {
+    if (cut) endCut(false, true);
+    const wrap = $id("gwrap"); if (!wrap) return onDone && onDone();
+    const prev = mode; mode = "cut";
+    const el = document.createElement("div");
+    el.className = "cut"; el.id = "cut";
+    el.innerHTML = `<div class="cut-frame">${Scenes.svgOf(sc)}</div>
+      <div class="cut-cap">${meta && meta.tag ? `<span class="tag">${esc(meta.tag)}</span>` : ""}${meta && meta.title ? `<b>${esc(meta.title)}</b>` : ""}<small>${esc(sc.place || "")}</small></div>
+      <div class="cut-skip">Space · 클릭 건너뛰기 ▶</div><div class="cut-bar"><i style="animation-duration:${sc.dur}ms"></i></div>`;
+    el.addEventListener("click", () => endCut(false));
+    wrap.appendChild(el);
+    const timers = (sc.sfx || []).map(([t, s]) => setTimeout(() => sfx(s), t * 1000));
+    timers.push(setTimeout(() => endCut(false), sc.dur + 500));
+    cut = { el, timers, prev, onDone, onCancel };
+  }
+  function endCut(cancelled, silent) {
+    if (!cut) return;
+    const c = cut; cut = null;
+    c.timers.forEach(clearTimeout);
+    c.el.classList.add("out"); setTimeout(() => c.el.remove(), 350);
+    mode = c.prev === "cut" ? "walk" : c.prev;
+    if (silent) return;
+    if (cancelled && c.onCancel) { mode = "walk"; return c.onCancel(); }
+    if (c.onDone) { if (mode === "dialog" || mode === "panel") return c.onDone(); mode = "walk"; c.onDone(); }
   }
   function pick(card, i, who) {
     const gm = g(), eff = card.choices[i].effects, delta = {};
@@ -306,7 +363,9 @@ const Story = (() => {
       <h2>${d.title}</h2><p class="muted">${d.sub} · 오늘의 상황 ${World.dayCards().length}개</p>
       <button class="btn" id="dgo">출근하기 ☀️</button></div>`, "intro");
     p.querySelector("#dgo").addEventListener("click", () => {
-      gm.phase = "play"; save(); closePanel(); updateHUD(); R.sync(); sfx("day");
+      gm.phase = "play"; save(); closePanel(); updateHUD(); R.sync();
+      if (!cutsOn()) return sfx("day");
+      playCut(Scenes.elevator({ me: look(), day: gm.day }, "up"), { tag: `${d.label} · 출근`, title: d.title }, () => sfx("day"), () => sfx("day"));
     });
   }
 
